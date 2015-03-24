@@ -89,7 +89,7 @@ namespace AfHelper
                 var serializer = new JavaScriptSerializer();
                 result = serializer.Serialize(listEventFrames);
             }
-            else { result = "no db"; }
+            else { result = "no db found"; }
 
             return result;
         }
