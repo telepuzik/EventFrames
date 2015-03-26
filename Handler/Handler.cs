@@ -20,13 +20,24 @@ namespace Handler
 
             var request = httpContext.Request.QueryString["action"];
             var AfHelper = new Helper();
-            string result;
+            string result, id;
             switch (request) { 
                 case "createeventframe":
                     result = AfHelper.CreateEventFrame();
                     break;
                 case "geteventframes":
                     result = AfHelper.GetEventFrames();
+                    break;
+                case "geteventframe":
+                    id = httpContext.Request.QueryString["id"];
+                    result = AfHelper.GetEventFrame(id);
+                    break;
+                case "geteventframetemplate":
+                    id = httpContext.Request.QueryString["id"];
+                    result = AfHelper.GetEventFrameTemplate(id);
+                    break;
+                case "gettemplates":
+                    result = AfHelper.GetEventFrameTemplates();
                     break;
                 default:
                     result = "no data";

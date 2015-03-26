@@ -10,9 +10,13 @@
 </head>
 <body>
     <form id="form1" runat="server">
+     <div id="newform"></div> 
     <div id="result">
-    
+    <table id="eventframes">
+        <th>Name</th><th>DateTime</th>
+    </table>
     </div>
+        
     </form>
 </body>
 </html>

@@ -18,6 +18,17 @@ namespace AfHelper
         public string DateTime { get; set; }
     }
 
+    public class Attribute {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class Template {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
+
     public class Helper
     {
         public AFDatabase InitializeAf()
@@ -48,18 +59,23 @@ namespace AfHelper
         public string CreateEventFrame() {
             var db = InitializeAf();
             string result;
+            var eventFrame = new EventFrame();
             if (db != null)
             {
-                result = "connected";
                 AFEventFrame myEventFrame = new AFEventFrame(db, "NewEventFrame*");
                 myEventFrame.SetStartTime("T-1w");
                 myEventFrame.SetEndTime(AFTime.Now);
                 myEventFrame.Template = db.ElementTemplates["Сообщение"];
                 AFValue myValue = new AFValue { Value = "Test" };
-                myEventFrame.Attributes["Комментарий"].SetValue(myValue);
+                myEventFrame.Attributes["Текст сообщения"].SetValue(myValue);
                 myEventFrame.Description = "This is my EventFrame";
                 myEventFrame.CheckIn();
-                result += Environment.NewLine + "event frame created"; 
+
+                eventFrame.Id = myEventFrame.ID.ToString();
+                eventFrame.Name = myEventFrame.Name;
+                eventFrame.DateTime = myEventFrame.EndTime.ToString();
+                var serializer = new JavaScriptSerializer();
+                result = serializer.Serialize(eventFrame);
             }
             else
             {
@@ -82,7 +98,7 @@ namespace AfHelper
                     {
                         Name = eventFrame.Name,
                         Id = eventFrame.ID.ToString(),
-                        DateTime = eventFrame.StartTime.ToString()
+                        DateTime = eventFrame.EndTime.ToString()
                     });
                 }
 
@@ -91,6 +107,97 @@ namespace AfHelper
             }
             else { result = "no db found"; }
 
+            return result;
+        }
+
+        public string GetEventFrame (string Id) {
+            var db = InitializeAf();
+            string result;
+            Guid guid = new Guid(Id);
+            AFEventFrame eventFrame = AFEventFrame.FindEventFrame(db.PISystem, guid);
+
+            var attributes = eventFrame.Attributes;
+            var attributesList = new List<Attribute>();
+            foreach (var attribute in attributes) {
+                if (attribute.Attributes.Count > 0) {
+                    var att = attribute.Attributes;
+                }
+                var a = new Attribute
+                {
+                    Name = attribute.Name,
+                    Type = attribute.Type.ToString()
+                };
+                if (attribute.GetValue().Value != null)
+                {
+                    a.Value = attribute.GetValue().Value.ToString();
+                }
+                attributesList.Add(a);
+            }
+
+            var serializer = new JavaScriptSerializer();
+            result = serializer.Serialize(attributesList);
+            return result;
+        }
+
+        public string GetEventFrameTemplates() { 
+            var db = InitializeAf();
+            string result;
+
+            var templates = db.ElementTemplates;
+            var templatesList = new List<Template>();
+            foreach (var template in templates)
+            {
+                if (template.InstanceType.FullName == "OSIsoft.AF.EventFrame.AFEventFrame")
+                {
+                    var t = new Template
+                    {
+                        Id = template.ID.ToString(),
+                        Name = template.Name.ToString()
+                    };
+
+                    templatesList.Add(t);
+                }
+            }
+            var serializer = new JavaScriptSerializer();
+            result = serializer.Serialize(templatesList);
+            return result;
+        }
+
+        public string GetEventFrameTemplate(string Id) {
+            var db = InitializeAf();
+            string result;
+
+            var templates = db.ElementTemplates;
+            var attributesList = new List<Attribute>();
+            foreach (var template in templates)
+            {
+                if (template.InstanceType.FullName == "OSIsoft.AF.EventFrame.AFEventFrame")
+                {
+                    if (template.ID.ToString() == Id)
+                    {
+                        var attributes = template.AttributeTemplates;
+                        foreach (var attribute in attributes)
+                        {
+                            if (!attribute.Categories.Contains("Internal"))
+                            {
+                                var a = new Attribute
+                                {
+                                    Name = attribute.Name,
+                                    Type = attribute.Type.ToString()
+                                };
+                                if (attribute.GetValue(null) != null)
+                                {
+                                    a.Value = attribute.GetValue(null).ToString();
+                                }
+                                attributesList.Add(a);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var serializer = new JavaScriptSerializer();
+            result = serializer.Serialize(attributesList);
             return result;
         }
     }

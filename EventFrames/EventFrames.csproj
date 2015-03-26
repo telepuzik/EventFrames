@@ -137,6 +137,27 @@
     <Compile Include="Default.aspx.designer.cs">
       <DependentUpon>Default.aspx</DependentUpon>
     </Compile>
+    <Compile Include="EventForms\EditForm.aspx.cs">
+      <DependentUpon>EditForm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EventForms\EditForm.aspx.designer.cs">
+      <DependentUpon>EditForm.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="EventForms\NewForm.aspx.cs">
+      <DependentUpon>NewForm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EventForms\NewForm.aspx.designer.cs">
+      <DependentUpon>NewForm.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="EventForms\ViewForm.aspx.cs">
+      <DependentUpon>ViewForm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EventForms\ViewForm.aspx.designer.cs">
+      <DependentUpon>ViewForm.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -205,10 +226,17 @@
     <Content Include="Content\themes\base\minified\jquery.ui.tabs.min.css" />
     <Content Include="Content\themes\base\minified\jquery.ui.theme.min.css" />
     <Content Include="Default.aspx" />
+    <Content Include="EventForms\EditForm.aspx" />
+    <Content Include="EventForms\NewForm.aspx" />
+    <Content Include="EventForms\ViewForm.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <None Include="Properties\PublishProfiles\eventframes.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
+    <Content Include="Scripts\eventframes\fields.js" />
+    <Content Include="Scripts\eventframes\loadeventframes.js" />
+    <Content Include="Scripts\eventframes\loadneweventform.js" />
+    <Content Include="Scripts\eventframes\loadvieweventform.js" />
     <Content Include="Scripts\jquery-1.8.2.js" />
     <Content Include="Scripts\jquery-1.8.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
