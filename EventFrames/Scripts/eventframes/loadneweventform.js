@@ -19,9 +19,28 @@ function InitializeForm() {
             id: eventId
         },
         success: function (data) {
+            console.log(data);
             var attributes = JSON.parse(data);
             for (var i = 0; i < attributes.length; i++) {
-                $("#newform").append("<div>" + attributes[i].Name + ": <input value='" + attributes[i].Value + "'></input></div><br/>");
+                var field;
+                switch (attributes[i].Type) {
+                    case "String":
+                        field = StringField(attributes[i]);
+                        break;
+                    case "DateTime":
+                        field = DateTimeField(attributes[i]);
+                        break;
+                    case "MultilineString":
+                        field = MultilineStringField(attributes[i]);
+                        break;
+                    case "File":
+                        field = FileUploadField(attributes[i]);
+                        break;
+                    case "List":
+                        field = ListField(attributes[i]);
+                        break;
+                }
+                $("#newform").append(field);
             }
         },
         error: function () {

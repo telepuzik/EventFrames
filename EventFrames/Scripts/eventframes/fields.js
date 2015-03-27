@@ -1,46 +1,38 @@
-﻿function CellConstant(id, value) {
-    return $("<div/>", {
-        'id': id,
-        'text': value
+﻿function StringField(attributes) {
+    var field = $("<div/>", {
     });
-}
-
-function CellString(id, value, required) {
-    var control = $("<input/>", {
-        'title': "Введите корректные данные",
-        'id': id,
-        'name': value,
-        'type': 'text',
-        'value': value,
-        change: function () {
-            var currentElement = { Id: this.id, Value: this.value };
-            SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-        }
+    var input = $("<input/>", {
+        value: attributes.Value
     });
-    if (required) {
-        control.attr("required", "");
+    if (attributes.Constant) {
+        input.attr("readonly", "readonly");
     }
-    return control;
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(input);
+    return field;
 }
 
-function CellDateTime(id, value, required) {
+function MultilineStringField(attributes) {
+    var field = $("<div/>");
+    var input = "<textarea>" + attributes.Value + "</textarea>";
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(input);
+    return field;
+}
+
+function DateTimeField(attributes) {
+    var field = $("<div/>");
+
     var control = $("<input/>", {
         'title': "Введите корректную дату",
-        'id': id,
-        'name': id,
+        'id': attributes.Id,
+        'name': attributes.Id,
         'type': 'datetime',
-
-        'value': value,
-        change: function () {
-            var currentElement = { Id: this.id, Value: this.value };
-            SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-        }
+        'value': attributes.Value
     });
-
-    if (required) {
-        control.attr("required", "");
-    }
-
+    
     control.datetimepicker({
         closeText: 'Закрыть',
         prevText: '<Пред',
@@ -70,156 +62,42 @@ function CellDateTime(id, value, required) {
         timeFormat: 'H:mm'
     });
 
-    return control;
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(control);
+
+    return field;
 }
 
-function CellNumber(id, value, required) {
-    var control = $("<input/>", {
-        'title': "Введите корретное число",
-        'id': id,
-        'name': id,
-        'type': 'number',
-        'value': value,
-        change: function () {
-            var currentElement = { Id: this.id, Value: this.value };
-            SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-        }
+function FileUploadField(attributes) {
+    var field = $("<div/>", {
     });
-    if (required) {
-        control.attr("required", "");
-    }
-    return control;
+    var input = $("<input/>", {
+        type: "file"
+    });
+    
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(input);
+    return field;
 }
 
-function CellList(currentObject) {
+function ListField(attributes) {
+    var field = $("<div/>");
     var control = $("<select/>", {
-        'title': currentObject.Desc,
-        'id': currentObject.Id,
-        change: function () {
-            var currentElement = { Id: this.id, Value: this.value };
-            SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-        }
+        'title': attributes.Name,
+        'id': attributes.Id,
     });
-    if ((currentObject.Value == "") || (currentObject.Value == null)) {
+    if ((attributes.Value == "") || (attributes.Value == null)) {
         control.append($("<option></option>"));
     }
-    for (var y = 0; y < currentObject.ValueSet.length; y++) {
-        control.append($("<option value='" + currentObject.ValueSet[y] + "'>" + currentObject.ValueSet[y] + "</option>"));
+    for (var y = 0; y < attributes.ValueSet.length; y++) {
+        control.append($("<option value='" + attributes.ValueSet[y] + "'>" + attributes.ValueSet[y] + "</option>"));
     }
-    control.val(currentObject.Value);
+    control.val(attributes.Value);
 
-    return control;
-}
-
-function CellLink(id, value, desc) {
-    return $("<a/>", {
-        'text': desc,
-        'id': id,
-        'href': value,
-        'target': '_blank'
-    });
-}
-
-function CellDictionaryComboBox(currentObject) {
-    var control = $("<select/>", {
-        'id': currentObject.Id,
-        change: function () {
-            $.ajax({
-                context: this,
-                url: urlService,
-                data: {
-                    action: "LoadFields",
-                    folder: $(this).val()
-                },
-                success: function (data) {
-                    LoadDictionaryFields(data, $(this).parent());
-                    var currentElement = { Id: currentObject.Id, Childrens: JSON.parse(data), Value: $(this).find("option:selected").text() };
-                    SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-                }
-            });
-        }
-    });
-
-    control.append($("<option/>", {
-        'text': "Выберите значение",
-        'selected': 'selected',
-        'value': null
-    }));
-
-    for (var i = 0; i < currentObject.ValueSet.length; i++) {
-        var selected = false;
-        if (currentObject.Value === currentObject.ValueSet[i].Value) {
-            selected = true;
-        }
-        control.append($("<option/>", {
-            'value': currentObject.ValueSet[i].Id,
-            'text': currentObject.ValueSet[i].Value,
-            'selected': selected
-        }));
-    }
-    return control;
-}
-
-function CellDictionaryTree(id) {
-    var control = $("<button/>", {
-        'text': "Выбрать",
-        'id': id,
-        click: function () {
-            var currentObjectId = this.id;
-            var dialogControl = $(this).parent().children(".dialog");
-            dialogControl.dialog({
-                autoOpen: false,
-                width: 600, modal: true,
-                buttons: {
-                    "Выбрать": function () {
-                        $(this).dialog("close");
-                        var nodes = dialogControl.children(".tree").jstree('get_selected');
-
-                        $.ajax({
-                            url: urlService,
-                            data: {
-                                action: "LoadFields",
-                                folder: nodes[0]
-                            },
-                            success: function (data) {
-                                LoadDictionaryFields(data, $("button#" + currentObjectId).parent());
-                                var currentElement = { Id: currentObjectId, Childrens: JSON.parse(data) };
-                                SaveCurrentState($(this).closest("[class$='Control']"), currentElement);
-                            }
-                        });
-                    },
-                    "Закрыть": function () {
-                        $(this).dialog("close");
-                    }
-                }
-            });
-            //$(":button:contains('Выбрать')").prop("disabled", true);
-            dialogControl.dialog("open");
-
-            //загрузка дерева в диалоге
-            $.ajax({
-                url: urlService,
-                data: {
-                    action: "LoadAfTree",
-                    folder: currentObjectId
-                },
-                success: function (data) {
-                    var treeList = JSON.parse(data);
-
-                    dialogControl.children(".tree").jstree({
-                        'core': {
-                            'themes': {
-                                'dots': false, 'icons': false,
-                                'name': 'proton', 'responsive': true
-                            },
-                            'data': treeList
-                        }
-                    });
-                }
-            });
-            return false;
-        }
-    });
-    control.button();
-    return control;
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(control);
+    return field;
 }

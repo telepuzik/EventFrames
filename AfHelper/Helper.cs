@@ -22,6 +22,18 @@ namespace AfHelper
         public string Name { get; set; }
         public string Type { get; set; }
         public string Value { get; set; }
+        public bool Constant { get; set; }
+        public bool Required { get; set; }
+    }
+
+    public class AttributeList: Attribute
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Value { get; set; }
+        public List<string> ValueSet { get; set; }
+        public bool Constant { get; set; }
+        public bool Required { get; set; }
     }
 
     public class Template {
@@ -178,17 +190,71 @@ namespace AfHelper
                         var attributes = template.AttributeTemplates;
                         foreach (var attribute in attributes)
                         {
-                            if (!attribute.Categories.Contains("Internal"))
+                            string type = String.Empty;
+                            string value = String.Empty;
+                            bool constant = false;
+                            bool required = false;
+                            if (attribute.AttributeTemplates["TYPE"] != null)
+                            {
+                                if (attribute.AttributeTemplates["TYPE"].GetValue(null) != null)
+                                {
+                                    type = attribute.AttributeTemplates["TYPE"].GetValue(null).ToString();
+                                }
+                            }
+                            if (attribute.AttributeTemplates["VALUE"] != null)
+                            {
+                                if (attribute.AttributeTemplates["VALUE"].GetValue(null) != null)
+                                {
+                                    value = attribute.AttributeTemplates["VALUE"].GetValue(null).ToString();
+                                }
+                            }
+                            if (attribute.AttributeTemplates["CONSTANT"] != null)
+                            {
+                                if (attribute.AttributeTemplates["CONSTANT"].GetValue(null) != null)
+                                {
+                                    constant = Convert.ToBoolean(attribute.AttributeTemplates["CONSTANT"].GetValue(null).ToString());
+                                }
+                            }
+                            if (attribute.AttributeTemplates["REQUIRED"] != null)
+                            {
+                                if (attribute.AttributeTemplates["REQUIRED"].GetValue(null) != null)
+                                {
+                                    required = Convert.ToBoolean(attribute.AttributeTemplates["REQUIRED"].GetValue(null).ToString());
+                                }
+                            }
+
+                            if (type != "List")
                             {
                                 var a = new Attribute
                                 {
                                     Name = attribute.Name,
-                                    Type = attribute.Type.ToString()
+                                    Type = type,
+                                    Value = value,
+                                    Constant = constant,
+                                    Required = required
                                 };
-                                if (attribute.GetValue(null) != null)
+        
+                                attributesList.Add(a);
+                            }
+                            else {
+                                var a = new AttributeList
                                 {
-                                    a.Value = attribute.GetValue(null).ToString();
+                                    Name = attribute.Name,
+                                    Type = type,
+                                    Value = value,
+                                    Constant = constant,
+                                    Required = required
+                                };
+                                a.ValueSet = new List<string>();
+                                var elementValueSet = (AFEnumerationSet)attribute.AttributeTemplates["VALUE"].TypeQualifier;
+                                if (elementValueSet != null)
+                                {
+                                    foreach (var currentValueInSet in elementValueSet)
+                                    {
+                                        a.ValueSet.Add(currentValueInSet.Name.ToString());
+                                    }
                                 }
+
                                 attributesList.Add(a);
                             }
                         }
