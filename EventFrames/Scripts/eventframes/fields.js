@@ -1,5 +1,7 @@
-﻿function StringField(attributes) {
-    var field = $("<div/>", {
+﻿var serviceUrl = "/Events.svcx"
+
+function StringField(attributes) {
+    var field = $("<td/>", {
     });
     var input = $("<input/>", {
         value: attributes.Value
@@ -10,20 +12,31 @@
     var label = "<label>" + attributes.Name + "</label>";
     field.append(label);
     field.append(input);
-    return field;
+
+    var object = {
+        field: input,
+        label: label
+    };
+
+    return object;
 }
 
 function MultilineStringField(attributes) {
-    var field = $("<div/>");
+    var field = $("<td/>");
     var input = "<textarea>" + attributes.Value + "</textarea>";
     var label = "<label>" + attributes.Name + "</label>";
     field.append(label);
     field.append(input);
-    return field;
+    var object = {
+        field: input,
+        label: label
+    };
+
+    return object;
 }
 
 function DateTimeField(attributes) {
-    var field = $("<div/>");
+    var field = $("<td/>");
 
     var control = $("<input/>", {
         'title': "Введите корректную дату",
@@ -66,11 +79,16 @@ function DateTimeField(attributes) {
     field.append(label);
     field.append(control);
 
-    return field;
+    var object = {
+        field: control,
+        label: label
+    };
+
+    return object;
 }
 
 function FileUploadField(attributes) {
-    var field = $("<div/>", {
+    var field = $("<td/>", {
     });
     var input = $("<input/>", {
         type: "file"
@@ -79,11 +97,16 @@ function FileUploadField(attributes) {
     var label = "<label>" + attributes.Name + "</label>";
     field.append(label);
     field.append(input);
-    return field;
+    var object = {
+        field: input,
+        label: label
+    };
+
+    return object;
 }
 
 function ListField(attributes) {
-    var field = $("<div/>");
+    var field = $("<td/>");
     var control = $("<select/>", {
         'title': attributes.Name,
         'id': attributes.Id,
@@ -99,5 +122,54 @@ function ListField(attributes) {
     var label = "<label>" + attributes.Name + "</label>";
     field.append(label);
     field.append(control);
-    return field;
+    var object = {
+        field: control,
+        label: label
+    };
+
+    return object;
+}
+
+function DictionaryField(attributes) {
+    var field = $("<td/>");
+    var control = $("<select/>", {
+        'title': attributes.Name,
+        'id': attributes.Id,
+        change: function () {
+            $.ajax({
+                context: this,
+                url: serviceUrl,
+                data: {
+                    action: "getdictionaryfields",
+                    id: $(this).val()
+                },
+                success: function (data) {
+                    FillDictionaryField(JSON.parse(data));
+                }
+            });
+        }
+    });
+    control.append($("<option></option>"));
+    for (var y = 0; y < attributes.ValueSet.length; y++) {
+        control.append($("<option value='" + attributes.ValueSet[y].Id + "'>" + attributes.ValueSet[y].Name + "</option>"));
+    }
+    control.val(attributes.Value);
+
+    var label = "<label>" + attributes.Name + "</label>";
+    field.append(label);
+    field.append(control);
+    var object = {
+        field: control,
+        label: label
+    };
+
+    return object;
+}
+
+function FillDictionaryField(attributes) {
+    for (var i = 0; i < attributes.length; i++) {
+        var label = $("label:contains('" + attributes[i].Name + "')");
+        var input = label.parent().parent().find("input");
+        input.val(attributes[i].Value);
+    }
 }

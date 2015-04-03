@@ -20,6 +20,11 @@ namespace AfHelper
 
     public class Attribute {
         public string Name { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class AttributeString : Attribute {
+        public string Name { get; set; }
         public string Type { get; set; }
         public string Value { get; set; }
         public bool Constant { get; set; }
@@ -34,6 +39,21 @@ namespace AfHelper
         public List<string> ValueSet { get; set; }
         public bool Constant { get; set; }
         public bool Required { get; set; }
+    }
+
+    public class AttributeDictionary : Attribute
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Value { get; set; }
+        public List<DictionaryValueSet> ValueSet { get; set; }
+        public bool Constant { get; set; }
+        public bool Required { get; set; }
+    }
+
+    public class DictionaryValueSet {
+        public string Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class Template {
@@ -129,12 +149,12 @@ namespace AfHelper
             AFEventFrame eventFrame = AFEventFrame.FindEventFrame(db.PISystem, guid);
 
             var attributes = eventFrame.Attributes;
-            var attributesList = new List<Attribute>();
+            var attributesList = new List<AttributeString>();
             foreach (var attribute in attributes) {
                 if (attribute.Attributes.Count > 0) {
                     var att = attribute.Attributes;
                 }
-                var a = new Attribute
+                var a = new AttributeString
                 {
                     Name = attribute.Name,
                     Type = attribute.Type.ToString()
@@ -222,46 +242,94 @@ namespace AfHelper
                                     required = Convert.ToBoolean(attribute.AttributeTemplates["REQUIRED"].GetValue(null).ToString());
                                 }
                             }
-
-                            if (type != "List")
-                            {
-                                var a = new Attribute
-                                {
-                                    Name = attribute.Name,
-                                    Type = type,
-                                    Value = value,
-                                    Constant = constant,
-                                    Required = required
-                                };
-        
-                                attributesList.Add(a);
-                            }
-                            else {
-                                var a = new AttributeList
-                                {
-                                    Name = attribute.Name,
-                                    Type = type,
-                                    Value = value,
-                                    Constant = constant,
-                                    Required = required
-                                };
-                                a.ValueSet = new List<string>();
-                                var elementValueSet = (AFEnumerationSet)attribute.AttributeTemplates["VALUE"].TypeQualifier;
-                                if (elementValueSet != null)
-                                {
-                                    foreach (var currentValueInSet in elementValueSet)
+                            
+                            switch (type) {
+                                case "List":
+                                    var b = new AttributeList
                                     {
-                                        a.ValueSet.Add(currentValueInSet.Name.ToString());
+                                        Name = attribute.Name,
+                                        Type = type,
+                                        Value = value,
+                                        Constant = constant,
+                                        Required = required
+                                    };
+                                    b.ValueSet = new List<string>();
+                                    var elementValueSet = (AFEnumerationSet)attribute.AttributeTemplates["VALUE"].TypeQualifier;
+                                    if (elementValueSet != null)
+                                    {
+                                        foreach (var currentValueInSet in elementValueSet)
+                                        {
+                                            b.ValueSet.Add(currentValueInSet.Name.ToString());
+                                        }
                                     }
-                                }
 
-                                attributesList.Add(a);
+                                    attributesList.Add(b);
+                                    break;
+                                    
+                                case "Dictionary":
+                                    var c = new AttributeDictionary
+                                    {
+                                        Name = attribute.Name,
+                                        Type = type,
+                                        Value = value,
+                                        Constant = constant,
+                                        Required = required
+                                    };
+
+                                    var el = (AFElement)attribute.AttributeTemplates["VALUE"].GetValue(null);
+                                    var valueSet = el.Elements.Select(currentValueInSet =>
+                                        new DictionaryValueSet { Id = currentValueInSet.ID.ToString(), Name = currentValueInSet.Name }).ToList();
+                                    c.ValueSet = valueSet;
+                                    attributesList.Add(c);
+                                    break;
+                                default:
+                                    var a = new AttributeString
+                                    {
+                                        Name = attribute.Name,
+                                        Type = type,
+                                        Value = value,
+                                        Constant = constant,
+                                        Required = required
+                                    };
+        
+                                    attributesList.Add(a);
+                                    break;
                             }
                         }
                     }
                 }
             }
 
+            var serializer = new JavaScriptSerializer();
+            result = serializer.Serialize(attributesList);
+            return result;
+        }
+
+        public string GetDictionaryFields(string Id) {
+            var db = InitializeAf();
+            string result;
+
+            Guid currentGuid;
+            try
+            {
+                currentGuid = new Guid(Id);
+            }
+            catch (Exception)
+            {
+                return "[]";
+            }
+
+            //Поиск элементов по адресу в rootFolder
+            var currentElement = AFElement.FindElement(db.PISystem, currentGuid);
+            var attributesList = new List<Attribute>();
+            foreach (AFAttribute attribute in currentElement.Attributes) {
+                var a = new Attribute
+                {
+                    Name = attribute.Name,
+                    Value = attribute.GetValue().Value.ToString()
+                };
+                attributesList.Add(a);
+            }
             var serializer = new JavaScriptSerializer();
             result = serializer.Serialize(attributesList);
             return result;

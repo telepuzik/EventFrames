@@ -39,8 +39,18 @@ function InitializeForm() {
                     case "List":
                         field = ListField(attributes[i]);
                         break;
+                    case "Dictionary":
+                        field = DictionaryField(attributes[i]);
+                        break;
                 }
-                $("#newform").append(field);
+                var row = $("<tr/>");
+                var label = $("<td/>");
+                label.append(field.label);
+                var object = $("<td/>");
+                object.append(field.field);
+                row.append(label);
+                row.append(object);
+                $("#newform").append(row);
             }
         },
         error: function () {

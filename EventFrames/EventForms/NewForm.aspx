@@ -14,8 +14,8 @@
 </head>
 <body>
     <form id="form1" runat="server">
-    <div id="newform">
-    </div>
+    <table id="newform">
+    </table>
     </form>
 </body>
 </html>

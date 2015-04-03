@@ -39,6 +39,9 @@ namespace Handler
                 case "gettemplates":
                     result = AfHelper.GetEventFrameTemplates();
                     break;
+                case "getdictionaryfields":
+                    result = AfHelper.GetDictionaryFields(httpContext.Request.QueryString["id"]);
+                    break;
                 default:
                     result = "no data";
                     break;
