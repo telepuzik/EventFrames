@@ -4,7 +4,8 @@ function StringField(attributes) {
     var field = $("<td/>", {
     });
     var input = $("<input/>", {
-        value: attributes.Value
+        value: attributes.Value,
+        id: attributes.Id
     });
     if (attributes.Constant) {
         input.attr("readonly", "readonly");
@@ -23,7 +24,10 @@ function StringField(attributes) {
 
 function MultilineStringField(attributes) {
     var field = $("<td/>");
-    var input = "<textarea>" + attributes.Value + "</textarea>";
+    var input = $("<textarea/>", {
+        text: attributes.Value,
+        id: attributes.Id
+    });
     var label = "<label>" + attributes.Name + "</label>";
     field.append(label);
     field.append(input);
@@ -91,6 +95,7 @@ function FileUploadField(attributes) {
     var field = $("<td/>", {
     });
     var input = $("<input/>", {
+        id: attributes.Id,
         type: "file"
     });
     

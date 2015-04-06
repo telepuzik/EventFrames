@@ -7,12 +7,13 @@
     <title></title>
     <script src="Scripts/jquery-1.8.2.min.js"></script>
     <script src="Scripts/eventframes/loadeventframes.js"></script>
+    
 </head>
 <body>
     <form id="form1" runat="server">
      <div id="newform"></div> 
     <div id="result">
-    <table id="eventframes">
+    <table id="eventframes" style="vertical-align:top">
         <th>Name</th><th>DateTime</th>
     </table>
     </div>

@@ -19,6 +19,7 @@ namespace AfHelper
     }
 
     public class Attribute {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Value { get; set; }
     }
@@ -29,6 +30,7 @@ namespace AfHelper
         public string Value { get; set; }
         public bool Constant { get; set; }
         public bool Required { get; set; }
+        public string Parent { get; set; }
     }
 
     public class AttributeList: Attribute
@@ -39,6 +41,7 @@ namespace AfHelper
         public List<string> ValueSet { get; set; }
         public bool Constant { get; set; }
         public bool Required { get; set; }
+        public string Parent { get; set; }
     }
 
     public class AttributeDictionary : Attribute
@@ -49,6 +52,7 @@ namespace AfHelper
         public List<DictionaryValueSet> ValueSet { get; set; }
         public bool Constant { get; set; }
         public bool Required { get; set; }
+        public string Parent { get; set; }
     }
 
     public class DictionaryValueSet {
@@ -63,6 +67,7 @@ namespace AfHelper
 
     public class Helper
     {
+        public AFDatabase currentDb = null;
         public AFDatabase InitializeAf()
         {
             //отключил олицетворение клиента, код выполняется от учетки пула
@@ -77,7 +82,8 @@ namespace AfHelper
 
                     myPiSystem.Connect();
 
-                    return myPiSystem.Databases["Database"];
+                    currentDb = myPiSystem.Databases["Database"];
+                    return currentDb;
 
                 }
                 catch (Exception)
@@ -89,15 +95,17 @@ namespace AfHelper
         }
 
         public string CreateEventFrame() {
-            var db = InitializeAf();
+            if (currentDb == null) {
+                currentDb = InitializeAf();
+            }
             string result;
             var eventFrame = new EventFrame();
-            if (db != null)
+            if (currentDb != null)
             {
-                AFEventFrame myEventFrame = new AFEventFrame(db, "NewEventFrame*");
+                AFEventFrame myEventFrame = new AFEventFrame(currentDb, "RandomEventFrame*");
                 myEventFrame.SetStartTime("T-1w");
                 myEventFrame.SetEndTime(AFTime.Now);
-                myEventFrame.Template = db.ElementTemplates["Сообщение"];
+                myEventFrame.Template = currentDb.ElementTemplates["Сообщение"];
                 AFValue myValue = new AFValue { Value = "Test" };
                 myEventFrame.Attributes["Текст сообщения"].SetValue(myValue);
                 myEventFrame.Description = "This is my EventFrame";
@@ -115,6 +123,20 @@ namespace AfHelper
             }
 
             return result;
+        }
+
+        public string DeleteEventFrame(string mask) {
+            if (currentDb == null)
+            {
+                currentDb = InitializeAf();
+            }
+            string result = String.Empty;
+            AFNamedCollectionList<AFEventFrame> eventFrames = AFEventFrame.FindEventFrames(currentDb, null, mask + "*", AFSearchField.Name, true, AFSortField.Name, AFSortOrder.Ascending, 0, 10000);
+            foreach (var eventFrame in eventFrames) {
+                eventFrame.Delete();
+                eventFrame.CheckIn();
+            }
+            return eventFrames.Count.ToString();
         }
 
         public string GetEventFrames() {
@@ -212,6 +234,7 @@ namespace AfHelper
                         {
                             string type = String.Empty;
                             string value = String.Empty;
+                            string parent = String.Empty;
                             bool constant = false;
                             bool required = false;
                             if (attribute.AttributeTemplates["TYPE"] != null)
@@ -242,16 +265,25 @@ namespace AfHelper
                                     required = Convert.ToBoolean(attribute.AttributeTemplates["REQUIRED"].GetValue(null).ToString());
                                 }
                             }
+                            if (attribute.AttributeTemplates["PARENT"] != null)
+                            {
+                                if (attribute.AttributeTemplates["PARENT"].GetValue(null) != null)
+                                {
+                                    parent = attribute.AttributeTemplates["PARENT"].GetValue(null).ToString();
+                                }
+                            }
                             
                             switch (type) {
                                 case "List":
                                     var b = new AttributeList
                                     {
+                                        Id = attribute.ID,
                                         Name = attribute.Name,
                                         Type = type,
                                         Value = value,
                                         Constant = constant,
-                                        Required = required
+                                        Required = required,
+                                        Parent = parent
                                     };
                                     b.ValueSet = new List<string>();
                                     var elementValueSet = (AFEnumerationSet)attribute.AttributeTemplates["VALUE"].TypeQualifier;
@@ -269,11 +301,13 @@ namespace AfHelper
                                 case "Dictionary":
                                     var c = new AttributeDictionary
                                     {
+                                        Id = attribute.ID,
                                         Name = attribute.Name,
                                         Type = type,
                                         Value = value,
                                         Constant = constant,
-                                        Required = required
+                                        Required = required,
+                                        Parent = parent
                                     };
 
                                     var el = (AFElement)attribute.AttributeTemplates["VALUE"].GetValue(null);
@@ -285,11 +319,13 @@ namespace AfHelper
                                 default:
                                     var a = new AttributeString
                                     {
+                                        Id = attribute.ID,
                                         Name = attribute.Name,
                                         Type = type,
                                         Value = value,
                                         Constant = constant,
-                                        Required = required
+                                        Required = required,
+                                        Parent = parent
                                     };
         
                                     attributesList.Add(a);

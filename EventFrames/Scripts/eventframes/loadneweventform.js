@@ -43,14 +43,32 @@ function InitializeForm() {
                         field = DictionaryField(attributes[i]);
                         break;
                 }
-                var row = $("<tr/>");
-                var label = $("<td/>");
-                label.append(field.label);
-                var object = $("<td/>");
-                object.append(field.field);
-                row.append(label);
-                row.append(object);
-                $("#newform").append(row);
+
+                //костыль
+                if (attributes[i].Parent == "") {
+                    var row = $("<tr/>");
+                    var label = $("<td/>");
+                    label.append(field.label);
+                    var object = $("<td/>");
+                    object.append(field.field);
+                    row.append(label);
+                    row.append(object);
+                    $("#newform").append(row);
+                }
+                else {
+                    var row = $("<tr/>");
+                    var label = $("<td/>");
+                    label.append(field.label);
+                    var object = $("<td/>");
+                    object.append(field.field);
+                    row.append(label);
+                    row.append(object);
+
+                    var a = $("label:contains('" + attributes[i].Parent + "')");
+                    var b = a.parent().parent().find("td:eq(1)");
+                    
+                    b.append(row);
+                }
             }
         },
         error: function () {
